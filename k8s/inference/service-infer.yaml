@@ -1,0 +1,118 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mnist-inference-service
+  labels:
+    app: mnist-inference
+    component: inference
+spec:
+  # ==============================================================================
+  # Service Type: LoadBalancer
+  # ==============================================================================
+  # LoadBalancer exposes the service externally using a cloud provider's load balancer
+  # 
+  # On GKE (Google Kubernetes Engine):
+  # - Automatically provisions a Google Cloud Load Balancer
+  # - Assigns an external IP address
+  # - Routes traffic from the internet to the service
+  # 
+  # On Local Kubernetes (Docker Desktop, Minikube):
+  # - Docker Desktop: localhost access
+  # - Minikube: Use `minikube tunnel` to expose the service
+  # 
+  # Alternative service types:
+  # - ClusterIP: Internal only (default)
+  # - NodePort: Exposes on each node's IP at a static port
+  # - LoadBalancer: External access with cloud load balancer (this one!)
+  type: LoadBalancer
+  
+  # ==============================================================================
+  # Port Mapping
+  # ==============================================================================
+  # Maps external port 80 (HTTP) to internal container port 8000 (FastAPI)
+  # Users access: http://<EXTERNAL-IP>/ (port 80 is default for HTTP)
+  # Traffic routes to: pod:8000 (FastAPI application)
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80              # External port (what users connect to)
+    targetPort: 8000      # Container port (FastAPI listens on 8000)
+  
+  # ==============================================================================
+  # Selector
+  # ==============================================================================
+  # Routes traffic to pods with matching labels
+  # Must match the labels in deployment-infer.yaml
+  selector:
+    app: mnist-inference
+  
+  # ==============================================================================
+  # Session Affinity (Optional)
+  # ==============================================================================
+  # Uncomment to enable sticky sessions (same client → same pod)
+  # Useful for stateful applications, but not needed for our stateless inference
+  # sessionAffinity: ClientIP
+  # sessionAffinityConfig:
+  #   clientIP:
+  #     timeoutSeconds: 10800  # 3 hours
+
+---
+# ==============================================================================
+# SERVICE USAGE INSTRUCTIONS
+# ==============================================================================
+#
+# DEPLOYMENT:
+# 1. Apply the deployment first:
+#    kubectl apply -f k8s/inference/deployment-infer.yaml
+#
+# 2. Apply this service:
+#    kubectl apply -f k8s/inference/service-infer.yaml
+#
+# 3. Wait for external IP assignment:
+#    kubectl get service mnist-inference-service --watch
+#
+# ACCESSING THE SERVICE:
+#
+# On GKE:
+# - Wait for EXTERNAL-IP to be assigned (may take 1-2 minutes)
+# - Access the web UI: http://<EXTERNAL-IP>/
+# - Example: http://34.123.45.67/
+#
+# On Docker Desktop:
+# - EXTERNAL-IP will show as "localhost"
+# - Access the web UI: http://localhost/
+#
+# On Minikube:
+# - Run: minikube tunnel (in a separate terminal)
+# - Get IP: kubectl get service mnist-inference-service
+# - Access: http://<EXTERNAL-IP>/
+#
+# TESTING:
+# - Web UI: http://<EXTERNAL-IP>/
+# - Health check: http://<EXTERNAL-IP>/healthz
+# - API docs: http://<EXTERNAL-IP>/docs
+# - App info: http://<EXTERNAL-IP>/info
+#
+# MONITORING:
+# - Check service status: kubectl get svc mnist-inference-service
+# - Check endpoints: kubectl get endpoints mnist-inference-service
+# - View service details: kubectl describe svc mnist-inference-service
+# - Check pod status: kubectl get pods -l app=mnist-inference
+#
+# TROUBLESHOOTING:
+# - If EXTERNAL-IP shows <pending>:
+#   * On GKE: Wait 1-2 minutes for provisioning
+#   * On local: Ensure LoadBalancer support is enabled
+#   * Alternative: Change type to NodePort for testing
+#
+# - If service is unreachable:
+#   * Check pods are running: kubectl get pods
+#   * Check pod logs: kubectl logs -l app=mnist-inference
+#   * Verify readiness probes: kubectl describe pods
+#   * Check firewall rules (GKE only)
+#
+# LOAD BALANCING:
+# - Traffic is automatically distributed across 2 replica pods
+# - If one pod is unhealthy, traffic routes to the healthy pod
+# - Service provides a stable endpoint even as pods are created/destroyed
+# ==============================================================================

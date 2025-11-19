@@ -1,0 +1,198 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mnist-inference
+  labels:
+    app: mnist-inference
+    component: inference
+spec:
+  # ==============================================================================
+  # SELF-HEALING: Replicas
+  # ==============================================================================
+  # Multiple replicas provide high availability and automatic recovery:
+  # - If one pod crashes, the other continues serving traffic
+  # - Kubernetes automatically creates new pods to maintain the desired count
+  # - Rolling updates ensure zero-downtime deployments
+  replicas: 2
+  
+  selector:
+    matchLabels:
+      app: mnist-inference
+  
+  # ==============================================================================
+  # SELF-HEALING: Rolling Update Strategy
+  # ==============================================================================
+  # Controls how pods are replaced during updates:
+  # - maxUnavailable: Maximum pods that can be down during update (25% = 0 pods)
+  # - maxSurge: Maximum extra pods created during update (25% = 1 pod)
+  # This ensures at least 1 pod is always available during updates
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  
+  template:
+    metadata:
+      labels:
+        app: mnist-inference
+    
+    spec:
+      # ==============================================================================
+      # SELF-HEALING: Restart Policy
+      # ==============================================================================
+      # Always restart containers that exit (crash, error, or completion)
+      # Kubernetes will automatically restart failed containers with exponential backoff
+      restartPolicy: Always
+      
+      containers:
+      - name: inference
+        image: mnist-infer:latest
+        imagePullPolicy: IfNotPresent  # Use local image for development
+        
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        
+        # ==============================================================================
+        # SELF-HEALING: Resource Limits
+        # ==============================================================================
+        # Prevents pods from consuming excessive resources and affecting other pods
+        # - requests: Guaranteed resources (used for scheduling)
+        # - limits: Maximum resources (pod killed if exceeded)
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        
+        # ==============================================================================
+        # SELF-HEALING: Liveness Probe
+        # ==============================================================================
+        # Checks if the application is alive and functioning
+        # - If probe fails, Kubernetes KILLS and RESTARTS the container
+        # - Detects deadlocks, infinite loops, or unresponsive applications
+        # - Uses the /healthz endpoint we created in FastAPI
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+            scheme: HTTP
+          initialDelaySeconds: 30    # Wait 30s after container starts
+          periodSeconds: 10           # Check every 10 seconds
+          timeoutSeconds: 5           # Probe timeout after 5 seconds
+          successThreshold: 1         # 1 success = healthy
+          failureThreshold: 3         # 3 failures = restart container
+        
+        # ==============================================================================
+        # SELF-HEALING: Readiness Probe
+        # ==============================================================================
+        # Checks if the application is ready to serve traffic
+        # - If probe fails, Kubernetes REMOVES pod from service endpoints
+        # - Traffic is NOT sent to unready pods
+        # - Pod remains running but doesn't receive requests
+        # - Useful during startup (model loading) or temporary issues
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+            scheme: HTTP
+          initialDelaySeconds: 10     # Check readiness after 10s
+          periodSeconds: 5            # Check every 5 seconds
+          timeoutSeconds: 3           # Probe timeout after 3 seconds
+          successThreshold: 1         # 1 success = ready for traffic
+          failureThreshold: 2         # 2 failures = remove from service
+        
+        # ==============================================================================
+        # SELF-HEALING: Startup Probe (Optional but Recommended)
+        # ==============================================================================
+        # Gives slow-starting containers more time to start
+        # - Disables liveness/readiness checks until startup succeeds
+        # - Useful for model loading which can take time
+        # - Prevents premature restarts during initialization
+        startupProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+            scheme: HTTP
+          initialDelaySeconds: 5      # Start checking after 5s
+          periodSeconds: 5            # Check every 5 seconds
+          timeoutSeconds: 3           # Probe timeout after 3 seconds
+          successThreshold: 1         # 1 success = startup complete
+          failureThreshold: 12        # 12 failures (60s) = restart
+        
+        # Environment variables
+        env:
+        - name: MODEL_DIR
+          value: "/mnt/model"
+        - name: APP_HOST
+          value: "0.0.0.0"
+        - name: APP_PORT
+          value: "8000"
+        
+        # ==============================================================================
+        # Persistent Volume Mount
+        # ==============================================================================
+        # Mounts the PVC containing the trained model
+        # - Read-only mount (inference doesn't modify the model)
+        # - Shared across all inference pods
+        volumeMounts:
+        - name: model-storage
+          mountPath: /mnt/model
+          readOnly: true
+      
+      # ==============================================================================
+      # Volume Definition
+      # ==============================================================================
+      # References the PVC created in Phase 3
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: mnist-model-pvc
+
+---
+# ==============================================================================
+# SELF-HEALING SUMMARY
+# ==============================================================================
+# This deployment implements multiple self-healing mechanisms:
+#
+# 1. REPLICAS (2 pods):
+#    - High availability: If one pod fails, the other serves traffic
+#    - Automatic replacement: Kubernetes creates new pods to maintain count
+#
+# 2. RESTART POLICY (Always):
+#    - Crashed containers are automatically restarted
+#    - Exponential backoff prevents restart loops
+#
+# 3. LIVENESS PROBE:
+#    - Detects unresponsive/deadlocked applications
+#    - Automatically restarts unhealthy containers
+#    - Checks /healthz endpoint every 10 seconds
+#
+# 4. READINESS PROBE:
+#    - Removes unready pods from service endpoints
+#    - Prevents traffic to pods that can't handle requests
+#    - Allows pods to recover without serving errors
+#
+# 5. STARTUP PROBE:
+#    - Gives model loading time to complete
+#    - Prevents premature liveness/readiness failures
+#    - Allows up to 60 seconds for startup
+#
+# 6. RESOURCE LIMITS:
+#    - Prevents resource exhaustion
+#    - Ensures fair resource distribution
+#    - Triggers pod eviction if limits exceeded
+#
+# 7. ROLLING UPDATES:
+#    - Zero-downtime deployments
+#    - Gradual rollout of new versions
+#    - Automatic rollback on failure
+#
+# Result: A resilient, self-healing inference service that automatically
+# recovers from failures, maintains availability, and serves predictions
+# reliably in production environments.
+# ==============================================================================
