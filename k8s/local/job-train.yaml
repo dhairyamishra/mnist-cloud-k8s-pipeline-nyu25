@@ -1,0 +1,59 @@
+# Kubernetes Job for MNIST Model Training (LOCAL VERSION)
+# This is configured for Docker Desktop Kubernetes testing.
+# Uses local Docker images without pulling from a registry.
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mnist-train-job
+  labels:
+    app: mnist-pipeline
+    component: training
+spec:
+  # Job will not retry on failure - manual intervention required
+  backoffLimit: 0
+  
+  template:
+    metadata:
+      labels:
+        app: mnist-pipeline
+        component: training
+    spec:
+      restartPolicy: Never
+      
+      containers:
+      - name: mnist-train
+        # Local image built with: docker build -t mnist-train:local -f training/Dockerfile training/
+        image: mnist-train:local
+        imagePullPolicy: Never  # Never pull - use local image only
+        
+        # Environment variables for training configuration
+        env:
+        - name: MODEL_DIR
+          value: "/mnt/model"
+        - name: EPOCHS
+          value: "5"
+        - name: BATCH_SIZE
+          value: "64"
+        - name: LR
+          value: "0.01"
+        
+        # Volume mount for model persistence
+        volumeMounts:
+        - name: model-storage
+          mountPath: /mnt/model
+        
+        # Resource requests and limits (optional but recommended)
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+      
+      # Volume definition - references the PVC
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: mnist-model-pvc

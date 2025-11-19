@@ -1,0 +1,71 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment variables
+.env
+
+# Local development
+.local/
+
+# PyTorch / ML data caches
+data/
+*.pt.tmp
+checkpoints/
+
+# Trained models (EXCLUDED BY DEFAULT - large files)
+# For this demo project, we allow local_model/ to be committed
+# Uncomment the lines below if you want to exclude models:
+# local_model/
+# *.pt
+# *.pth
+*.onnx
+*.h5
+*.pkl
+*.pickle
+
+# MNIST dataset (DO NOT COMMIT - downloaded automatically during training)
+mnist/
+MNIST/
+*.gz
+*.idx*-ubyte
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (if ever added)
+node_modules/
+
+# Kubernetes local configs
+*.kubeconfig
+
+# Docker build artifacts
+.dockerignore
+
+# Temporary files
+*.tmp
+*.temp
+*.bak

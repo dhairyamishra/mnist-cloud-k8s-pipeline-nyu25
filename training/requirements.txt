@@ -1,0 +1,6 @@
+# PyTorch and torchvision (CPU-only versions)
+torch>=2.6.0
+torchvision>=0.20.0
+
+# Progress bar for training
+tqdm>=4.66.0

@@ -1,0 +1,58 @@
+{
+  "model_name": "MnistCNN",
+  "training_date": "2025-11-18T19:37:43.661462",
+  "hyperparameters": {
+    "epochs": 5,
+    "batch_size": 64,
+    "learning_rate": 0.01,
+    "optimizer": "SGD",
+    "momentum": 0.9
+  },
+  "dataset": {
+    "name": "MNIST",
+    "train_samples": 60000,
+    "test_samples": 10000
+  },
+  "results": {
+    "final_test_accuracy": 99.2,
+    "final_test_loss": 0.024194895381535075,
+    "best_test_accuracy": 99.21
+  },
+  "training_history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.24256663788646174,
+      "train_accuracy": 92.32833333333333,
+      "test_loss": 0.054621272217845664,
+      "test_accuracy": 98.07
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.06474668302013278,
+      "train_accuracy": 98.05166666666666,
+      "test_loss": 0.04047959216645693,
+      "test_accuracy": 98.61
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.04811891915753478,
+      "train_accuracy": 98.54333333333334,
+      "test_loss": 0.039255973615060384,
+      "test_accuracy": 98.79
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.037837510221021706,
+      "train_accuracy": 98.83166666666666,
+      "test_loss": 0.02516695380778679,
+      "test_accuracy": 99.21
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.03141887953730428,
+      "train_accuracy": 99.005,
+      "test_loss": 0.024194895381535075,
+      "test_accuracy": 99.2
+    }
+  ]
+}

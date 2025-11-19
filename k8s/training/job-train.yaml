@@ -1,0 +1,61 @@
+# Kubernetes Job for MNIST Model Training
+# This Job runs once to train the model and save it to the PVC.
+# Once completed successfully, the trained model will be available for the inference service.
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mnist-train-job
+  labels:
+    app: mnist-pipeline
+    component: training
+spec:
+  # Job will not retry on failure - manual intervention required
+  backoffLimit: 0
+  
+  template:
+    metadata:
+      labels:
+        app: mnist-pipeline
+        component: training
+    spec:
+      restartPolicy: Never
+      
+      containers:
+      - name: mnist-train
+        # IMAGE NOTE: Update this based on your deployment target:
+        # - Local (Docker Desktop): mnist-train:local
+        # - GKE: gcr.io/YOUR_GCP_PROJECT_ID/mnist-train:latest
+        image: gcr.io/YOUR_GCP_PROJECT_ID/mnist-train:latest
+        imagePullPolicy: IfNotPresent
+        
+        # Environment variables for training configuration
+        env:
+        - name: MODEL_DIR
+          value: "/mnt/model"
+        - name: EPOCHS
+          value: "5"
+        - name: BATCH_SIZE
+          value: "64"
+        - name: LR
+          value: "0.01"
+        
+        # Volume mount for model persistence
+        volumeMounts:
+        - name: model-storage
+          mountPath: /mnt/model
+        
+        # Resource requests and limits (optional but recommended)
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+      
+      # Volume definition - references the PVC
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: mnist-model-pvc

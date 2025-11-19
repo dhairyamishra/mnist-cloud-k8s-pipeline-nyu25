@@ -1,0 +1,23 @@
+# PersistentVolumeClaim for MNIST Model Storage (GKE VERSION)
+# This PVC provides shared storage between the training Job and inference Deployment.
+# GKE will automatically provision a persistent disk using the default StorageClass.
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mnist-model-pvc
+  labels:
+    app: mnist-pipeline
+    component: storage
+spec:
+  # Access mode: ReadWriteOnce allows the volume to be mounted by a single node
+  accessModes:
+    - ReadWriteOnce
+  
+  # Storage request: 2Gi is more than enough for the MNIST model (~2MB) plus metadata
+  resources:
+    requests:
+      storage: 2Gi
+  
+  # storageClassName is omitted to use the default StorageClass on GKE
+  # GKE will automatically provision a persistent disk
