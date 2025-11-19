@@ -20,3 +20,4 @@ spec:
       storage: 2Gi
   
   # Uses Docker Desktop's default storage class (hostpath)
+  storageClassName: hostpath

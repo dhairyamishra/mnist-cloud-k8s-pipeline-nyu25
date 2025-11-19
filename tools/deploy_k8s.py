@@ -85,7 +85,7 @@ class KubernetesDeployer:
             print(f"Error: {e.stderr}")
             return False
     
-    def wait_for_pvc(self, pvc_name: str, timeout: int = 60) -> bool:
+    def wait_for_pvc(self, pvc_name: str, timeout: int = 120) -> bool:
         """
         Wait for a PVC to be bound.
         
@@ -98,17 +98,32 @@ class KubernetesDeployer:
         """
         print(f"\nWaiting for PVC '{pvc_name}' to be bound (timeout: {timeout}s)...")
         
-        try:
-            result = self.run_kubectl([
-                "wait", "--for=condition=Bound",
-                f"pvc/{pvc_name}",
-                f"--timeout={timeout}s"
-            ])
-            print(f"✓ PVC '{pvc_name}' is bound\n")
-            return True
-        except subprocess.CalledProcessError:
-            print(f"✗ PVC '{pvc_name}' failed to bind within {timeout}s\n")
-            return False
+        import time
+        start_time = time.time()
+        
+        while time.time() - start_time < timeout:
+            try:
+                # Get PVC status
+                result = self.run_kubectl([
+                    "get", "pvc", pvc_name,
+                    "-o", "jsonpath={.status.phase}"
+                ], check=False)
+                
+                status = result.stdout.strip()
+                
+                if status == "Bound":
+                    print(f"✓ PVC '{pvc_name}' is bound\n")
+                    return True
+                
+                # Wait a bit before checking again
+                time.sleep(2)
+                
+            except Exception as e:
+                print(f"Error checking PVC status: {e}")
+                time.sleep(2)
+        
+        print(f"✗ PVC '{pvc_name}' failed to bind within {timeout}s\n")
+        return False
     
     def wait_for_job(self, job_name: str, timeout: int = 900) -> bool:
         """
