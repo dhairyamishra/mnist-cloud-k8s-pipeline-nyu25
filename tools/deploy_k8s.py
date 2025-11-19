@@ -50,7 +50,9 @@ class KubernetesDeployer:
             check=check,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True
+            text=True,
+            encoding='utf-8',
+            errors='replace'
         )
     
     def apply_manifest(self, manifest_path: str) -> bool:

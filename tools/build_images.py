@@ -71,7 +71,9 @@ class ImageBuilder:
                 check=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                text=True
+                text=True,
+                encoding='utf-8',
+                errors='replace'
             )
             
             # Print output
@@ -112,7 +114,9 @@ class ImageBuilder:
                 check=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                text=True
+                text=True,
+                encoding='utf-8',
+                errors='replace'
             )
             
             print(result.stdout)

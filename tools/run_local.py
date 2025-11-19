@@ -38,7 +38,7 @@ class LocalRunner:
             CompletedProcess object
         """
         cmd = ["docker"] + args
-        return subprocess.run(cmd, check=True)
+        return subprocess.run(cmd, check=True, encoding='utf-8', errors='replace')
     
     def run_training(self):
         """Run the training container locally."""
