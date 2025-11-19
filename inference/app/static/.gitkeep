@@ -1,0 +1,7 @@
+# This file ensures the static directory is tracked by git
+# The static directory can be used for:
+# - CSS files
+# - JavaScript files
+# - Images
+# - Fonts
+# - Other static assets

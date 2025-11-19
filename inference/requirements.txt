@@ -1,0 +1,22 @@
+# PyTorch and torchvision (CPU-only versions)
+torch>=2.6.0
+torchvision>=0.20.0
+
+# FastAPI and web server
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+
+# Pydantic for data validation (v2 required for Python 3.13 compatibility)
+pydantic>=2.0.0,<2.12
+
+# Image processing
+pillow>=10.0.0
+
+# Data handling
+numpy>=1.24.0
+
+# Template rendering (included with FastAPI but explicit for clarity)
+jinja2>=3.1.0
+
+# Python multipart for file uploads
+python-multipart>=0.0.6
