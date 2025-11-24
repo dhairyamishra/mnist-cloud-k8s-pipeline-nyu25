@@ -47,7 +47,7 @@ spec:
       
       containers:
       - name: inference
-        image: mnist-infer:latest
+        image: gcr.io/mnist-k8s-pipeline/mnist-infer:latest
         imagePullPolicy: IfNotPresent  # Use local image for development
         
         ports:

@@ -15,6 +15,7 @@ A production-ready machine learning pipeline for training and serving MNIST digi
 - [Architecture](#architecture)
 - [Features](#features)
 - [Quick Start](#quick-start)
+- [Live GCP Deployment](#live-gcp-deployment)
 - [Self-Healing Mechanisms](#self-healing-mechanisms)
 - [Usage Examples](#usage-examples)
 - [Troubleshooting](#troubleshooting)
@@ -132,6 +133,48 @@ kubectl apply -f k8s/inference/deployment-infer.yaml
 kubectl apply -f k8s/inference/service-infer.yaml
 
 # 5. Access at http://localhost/
+```
+
+---
+
+## 🌐 Live GCP Deployment
+
+This project is currently deployed on **Google Kubernetes Engine (GKE)** and accessible at:
+
+### **🔗 Live Endpoint**
+**Web UI**: http://34.173.103.239
+
+### **API Endpoints**
+- **Prediction**: `POST http://34.173.103.239/predict`
+- **Health Check**: `GET http://34.173.103.239/healthz`
+- **API Docs**: `GET http://34.173.103.239/docs`
+- **Info**: `GET http://34.173.103.239/info`
+
+### **GCP Deployment Details**
+- **Platform**: Google Kubernetes Engine (GKE)
+- **Region**: us-central1-a
+- **Cluster**: mnist-cluster
+- **Node Type**: e2-medium (2 vCPU, 4GB RAM)
+- **Disk Size**: 50GB per node
+- **Replicas**: 2 inference pods
+- **Model Accuracy**: 99.12%
+
+### **Try It Now**
+1. Visit http://34.173.103.239
+2. Upload a handwritten digit image (0-9)
+3. Click "Predict Digit"
+4. View real-time prediction with confidence scores
+
+### **Test with cURL**
+```bash
+# Health check
+curl http://34.173.103.239/healthz
+
+# Get service info
+curl http://34.173.103.239/info
+
+# Make a prediction (replace with your image)
+curl -X POST http://34.173.103.239/predict -F "file=@digit.png"
 ```
 
 ---
